@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String           @id @default(uuid())
+  email                String?          @unique
+  number               String           @unique
+  name                 String?
+  password             String?          
+  kyc_status           KycStatus        @default(PENDING)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  onRampTransactions   OnRampTransaction[]
+  balance              Balance?
+  sentTransactions     P2PTransaction[] @relation("Sender")
+  receivedTransactions P2PTransaction[] @relation("Receiver")
+}
+
+model Merchant {
+  id               String     @id @default(uuid())
+  email            String     @unique
+  number           String?    @unique
+  password         String
+  business_name    String
+  category         String?
+  business_address String?
+  gst_number       String?
+  pan_number       String?
+  kyc_status       KycStatus  @default(PENDING)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  auth_type        AuthType   @default(Email)
+}
+
+model Balance {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  amount    Float    @default(0)
+  locked    Float    @default(0)
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model OnRampTransaction {
+  id           String   @id @default(uuid())
+  status       Status
+  token        String   @unique
+  provider     String
+  amount       Float
+  userId       String
+  initiated_at DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model P2PTransaction {
+  id           String   @id @default(uuid())          
+  status       Status
+  senderId     String
+  receiverId   String
+  amount       Float
+  initiated_at DateTime @default(now())
+  sender       User     @relation("Sender", fields: [senderId], references: [id])
+  receiver     User     @relation("Receiver", fields: [receiverId], references: [id])
+}
+
+enum AuthType {
+  Google
+  Email
+  Phone
+}
+
+enum KycStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum Status {
+  PENDING
+  COMPLETED
+  FAILED
+}
