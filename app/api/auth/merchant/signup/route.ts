@@ -1,25 +1,25 @@
 "use server";
 import { NextRequest, NextResponse } from "next/server";
-import { UserSignUpSchema } from "@/types/user/userSignUp";
+import { MerchantSignUpSchema } from "@/types/merchant/merchantSignUp";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
     
-        const { email, number, name} = body;
+        const { email, number, business_name } = body;
 
-        const parsedData = UserSignUpSchema.safeParse({
+        const parsedData = MerchantSignUpSchema.safeParse({
             email,
             number,
-            name
+            business_name
         });
 
         if( !parsedData.success ) {
             return NextResponse.json({ error: parsedData.error }, { status: 400 });
         }
-        
-        const existingUser = await prisma.user.findFirst({
+
+        const existingMerchant = await prisma.merchant.findFirst({
             where: {
                 OR: [
                     { email: parsedData.data.email },
@@ -28,19 +28,19 @@ export async function POST(request: NextRequest) {
             }
         })
 
-        if( existingUser ) {
-            return NextResponse.json({ error: "User with this email or phone number already exists" }, { status: 400 });
+        if( existingMerchant ) {
+            return NextResponse.json({ error: "Merchant with this email or phone number already exists" }, { status: 400 });
         }
-        
-        const newUser = await prisma.user.create({
+
+        const newMerchant = await prisma.merchant.create({
             data: {
                 email: parsedData.data.email,
                 number: parsedData.data.number,
-                name: parsedData.data.name
+                business_name: parsedData.data.business_name
             }
         })
 
-        return NextResponse.json({ message: "User created successfully", user: newUser }, { status: 201 });
+        return NextResponse.json({ message: "Merchant created successfully", user: newMerchant }, { status: 201 });
         
     }
     catch (error: unknown) {

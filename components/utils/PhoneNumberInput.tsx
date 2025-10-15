@@ -10,13 +10,13 @@ interface PhoneNumberInputProps {
 
 export const PhoneNumberInput = memo(({ value, onChange }: PhoneNumberInputProps) => {
   return (
-    <div className="w-full">
+    <div className="w-full [&_.PhoneInputCountrySelect]:text-blue-800">
       <PhoneInput
         placeholder="Enter phone number"
         defaultCountry="US"
         value={value}
         onChange={(value) => onChange(value ?? "")}
-        className="w-full input-lg border-b-1 text-white bg-gray-800 p-2"
+        className="w-full input-lg border-b-1  p-2"
       />
     </div>
 

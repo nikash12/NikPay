@@ -26,8 +26,7 @@ model User {
 model Merchant {
   id               String     @id @default(uuid())
   email            String     @unique
-  number           String?    @unique
-  password         String
+  number           String    @unique
   business_name    String
   category         String?
   business_address String?
@@ -36,7 +35,7 @@ model Merchant {
   kyc_status       KycStatus  @default(PENDING)
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
-  auth_type        AuthType   @default(Email)
+  auth_type        AuthType   @default(OTP)
 }
 
 model Balance {
@@ -70,10 +69,15 @@ model P2PTransaction {
   receiver     User     @relation("Receiver", fields: [receiverId], references: [id])
 }
 
+model otp {
+  id        String   @id @default(uuid())
+  number    String   @unique
+  code      String
+  expiresAt DateTime  
+}
+
 enum AuthType {
-  Google
-  Email
-  Phone
+  OTP
 }
 
 enum KycStatus {
