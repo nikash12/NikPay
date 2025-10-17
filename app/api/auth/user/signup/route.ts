@@ -40,6 +40,13 @@ export async function POST(request: NextRequest) {
             }
         })
 
+        await prisma.balance.create({
+            data: {
+                userId: newUser.id,
+                amount: 0
+            }
+        })
+
         return NextResponse.json({ message: "User created successfully", user: newUser }, { status: 201 });
         
     }

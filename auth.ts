@@ -26,8 +26,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!user) throw new Error("User not found");
 
         return {
-          id: number,
+          id: user.id,
           role: "user",
+          number: user.number,
           name: user.name,
           email: user.email,
           kyc_status: user.kyc_status as KycStatus,
@@ -43,6 +44,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.name = user.name;
         token.email = user.email;
         token.kyc_status = user.kyc_status;
+        token.number = user.number;
       }
       return token;
     },
