@@ -1,4 +1,5 @@
 "use client";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 import OtpForm from "@/components/utils/OtpForm";
 import { PhoneNumberInput } from "@/components/utils/PhoneNumberInput";
 import axios from "axios";
@@ -9,22 +10,20 @@ export default function SignInPage() {
   const [number, setNumber] = useState<string>("");
   const [otpSent, setOtpSent] = useState<boolean>(false);
   const [mockedOtp, setMockedOtp] = useState<string>("");
-
+  const { showToast } = useToast();
   const handleSendOtp = async () => {
     if (!number) {
-      alert("Please enter a valid phone number");
+      showToast("Please enter a valid phone number", "error");
       return;
     }
 
     axios.post("/api/auth/send-otp",{ number })
     .then((res) => {
-        alert("OTP sent successfully");
         setMockedOtp(res.data.otp);
         setOtpSent(true);
     })
     .catch((err) => {
-        console.error(err);
-        alert("Error sending OTP");
+        showToast("Failed!! Create Account before signing in", "error");
     });
   };
   return (

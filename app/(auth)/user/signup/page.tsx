@@ -6,12 +6,14 @@ import { UserSignUpType,UserSignUpSchema } from "@/types/user/userSignUp";
 import axios from "axios"
 import { useRouter } from "next/navigation";
 import { error } from "console";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 export default function SignUpPage() {
     const router = useRouter()
+    const { showToast } = useToast();
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         if( !verified ) {
-            alert("Please verify your phone number");   
+            showToast("Please verify your phone number", "error");
             return;
         }
         e.preventDefault();
@@ -27,17 +29,17 @@ export default function SignUpPage() {
 
         const res = UserSignUpSchema.safeParse(userData)
         if(!res.success) {
-            alert("Enter details correctly")
+            showToast("Enter details correctly", "error");
             return
         }
 
         axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/user/signup`, userData)
         .then((data) => {
             console.log(data.data);
-            router.push("/user/dashboard")
+            router.push("/user/signin");
         })
         .catch((error)=>{
-            alert(error)
+            showToast("Failed to create account", "error");
         })
         console.log(userData);
     };

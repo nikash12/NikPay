@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import axios from "axios";
-import { set, z } from "zod";
+import { z } from "zod";
+import { useToast } from "./toast/ToastProvider";
 
 const schema = z.object({
     amount: z.number().min(1, "Amount must be at least 1").max(100000, "Amount must be less than or equal to 100000"),
@@ -15,7 +16,7 @@ export default function AddMoney() {
     const [loading, setLoading] = useState(false);
     const [orderId, setOrderId] = useState<string | null>(null);
     const [token, setToken] = useState<string | null>(null);
-
+    const { showToast } = useToast();
     async function handleAddMoney() {
         //we initiate the onramp process
         try {
@@ -38,7 +39,7 @@ export default function AddMoney() {
         const parsedAmount = Number(amount);
         const validation = schema.safeParse({ amount: parsedAmount });
         if (!validation.success) {
-            alert(validation.error.message);
+            showToast(validation.error.issues.map(issue => issue.message).join(", "), "error");
             return;
         }
         try {

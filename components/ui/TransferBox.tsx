@@ -2,13 +2,14 @@ import axios from "axios"
 import { useState } from "react"
 import { z } from "zod"
 import { PhoneNumberInput } from "../utils/PhoneNumberInput"
+import { useToast } from "./toast/ToastProvider"
 
 export default function TransferBox() {
     const [number, setNumber] = useState<string>("")
     const [amount, setAmount] = useState<string>("")
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<string>("")
-
+    const { showToast } = useToast();
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
         setError("") // Reset error
@@ -41,10 +42,12 @@ export default function TransferBox() {
             console.log("Transfer successful:", { number, amount })
             setNumber("")
             setAmount("")
+            showToast("Money sent successfully!", "success");
         } catch (err: unknown) {
-            setError("Failed to send money. Try again.")
+            showToast("Failed to send money. Try again.", "error");
+            setError("Failed to send money. Try again.");
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
     }
 

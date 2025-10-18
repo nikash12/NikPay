@@ -1,11 +1,12 @@
 "use client"
 import { useRef, useState } from "react";
 import { signIn } from "next-auth/react";
+import { useToast } from "../ui/toast/ToastProvider";
 
 export default function OtpForm({role, number}:{role:"user" | "merchant", number:string}) {
     const [otp, setOtp] = useState<(string | number)[]>(["", "", "", ""]);
     const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
-    
+    const { showToast } = useToast();
     const handleChange = (index: number, value: string) => {
         if(!/^\d*$/.test(value)) return; 
         const newOtp = [...otp];
@@ -25,7 +26,7 @@ export default function OtpForm({role, number}:{role:"user" | "merchant", number
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if(otp.some(digit => digit === "")) {
-            alert("Please enter all OTP digits");
+            showToast("Please enter all OTP digits", "error");
             return;
         }
         const enteredOtp = otp.join("");
@@ -38,10 +39,10 @@ export default function OtpForm({role, number}:{role:"user" | "merchant", number
         })
         console.log(result);
         if (result?.error) {
-            alert("OTP invalid or expired");
+            showToast("OTP invalid or expired", "error");
         } else {
             // success, manually redirect
-            window.location.href = `/dashboard`;
+            window.location.href = `/user/dashboard`;
         }
     }
 
