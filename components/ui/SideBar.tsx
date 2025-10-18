@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function SideBar({children}: {children?: React.ReactNode}) {
     return (
-        <div className="drawer drawer-open bg-green-900">
+        <div className="drawer drawer-open">
             <input id="my-drawer-4" type="checkbox" className="drawer-toggle" />
             <div className="drawer-content">
                 {children}

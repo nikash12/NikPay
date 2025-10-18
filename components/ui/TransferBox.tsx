@@ -2,35 +2,84 @@ import axios from "axios"
 import { useState } from "react"
 import { z } from "zod"
 import { PhoneNumberInput } from "../utils/PhoneNumberInput"
+
 export default function TransferBox() {
     const [number, setNumber] = useState<string>("")
     const [amount, setAmount] = useState<string>("")
+    const [loading, setLoading] = useState<boolean>(false)
+    const [error, setError] = useState<string>("")
 
-    async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
-        e.preventDefault();        
-        if(!number || !amount) return
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault()
+        setError("") // Reset error
+        console.log("Input lengths:", { number: number.length, amount: amount.length })
+
+        if (!number || !amount) {
+            setError("Both fields are required")
+            return
+        }
+
         const schema = z.object({
-            number : z.string().min(10).max(10),
-            amount : z.string().min(1).max(6)
+            number: z.string().min(10, "Enter a valid phone number").max(13),
+            amount: z.string().min(1, "Enter an amount").max(6)
         })
-        const res = schema.safeParse({number, amount})
-        if(!res.success) return
+
+        const res = schema.safeParse({ number, amount })
+
+        if (!res.success) {
+            setError(res.error.issues.map(e => e.message).join(", "))
+            return
+        }
+
         const { data } = res
-        try{
+        setLoading(true)
+        try {
             await axios.post(`/api/user/p2p`, {
-                number: data.number,
+                to: data.number,
                 amount: data.amount
             })
-        }catch(err: unknown){
-            throw err
+            console.log("Transfer successful:", { number, amount })
+            setNumber("")
+            setAmount("")
+        } catch (err: unknown) {
+            setError("Failed to send money. Try again.")
+        } finally {
+            setLoading(false)
         }
     }
 
-    return(
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
-            <PhoneNumberInput value={number} onChange={setNumber} />            
-            <input type="text" placeholder="Amount(INR)" className="border-b-1 input-lg p-1" value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <button type="submit" className="btn ">Send Money</button>
+    return (
+        <form
+            onSubmit={handleSubmit}
+            className="shadow-md rounded-xl p-6 grid gap-5 w-full max-w-md mx-auto"
+        >
+            <h2 className="text-xl font-semibold text-white text-center">
+                Send Money
+            </h2>
+
+            <label className="text-sm font-medium text-white">Phone Number</label>
+            <PhoneNumberInput value={number} onChange={setNumber} />
+
+            <label className="text-sm font-medium text-white">Amount (INR)</label>
+            <input
+                type="number"
+                placeholder="Enter amount"
+                className="border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+            />
+
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
+            <button
+                type="submit"
+                className={`btn btn-primary btn-lg w-full ${
+                    loading ? "loading" : ""
+                }`}
+                disabled={loading}
+            >
+                {loading ? "Processing..." : "Send Money"}
+            </button>
         </form>
     )
 }

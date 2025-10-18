@@ -1,9 +1,7 @@
 import { NextRequest } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
-import { getSession } from "next-auth/react";
 import { auth } from "@/auth";
-import { send } from "process";
 
 export async function POST(request: NextRequest) {
     const session = await auth();
@@ -14,7 +12,7 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const schema = z.object({
-            to : z.string().length(10).regex(/^\d+$/),
+            to : z.string().length(13),
             amount : z.string().regex(/^\d+(\.\d+)?$/)
         })
         const res = schema.safeParse(body)
@@ -23,10 +21,6 @@ export async function POST(request: NextRequest) {
         }
         const { to, amount } = res.data;
         const amt = Math.floor(parseFloat(amount) * 100);
-        //checkinng number format
-        if(!to.match(/^[0-9]{10}$/)){
-            return new Response("Invalid number format", { status: 400 });
-        }
 
         // checking if receiver exists
         const receiver  = await prisma.user.findUnique({
@@ -45,7 +39,7 @@ export async function POST(request: NextRequest) {
                 userId: session.user.id
             }
         })
-        if(!senderBalance || senderBalance.amount < parseFloat(amount)){
+        if(!senderBalance || senderBalance.amount < amt){
             return new Response("Insufficient balance", { status: 400 });
         }
 
@@ -67,7 +61,7 @@ export async function POST(request: NextRequest) {
                     senderId: session.user.id,
                     receiverId: receiver.id,
                     status: "COMPLETED",
-                    amount: parseFloat(amount)
+                    amount: amt
                 }
             });
         });
