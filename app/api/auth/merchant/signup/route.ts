@@ -18,6 +18,17 @@ export async function POST(request: NextRequest) {
         if( !parsedData.success ) {
             return NextResponse.json({ error: parsedData.error }, { status: 400 });
         }
+        const existingUser = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: parsedData.data.email },
+                    { number: parsedData.data.number }
+                ]
+            }
+        });
+        if( existingUser ) {
+            return NextResponse.json({ error: "User and Merchant should have unique email and phone number" }, { status: 400 });
+        }   
 
         const existingMerchant = await prisma.merchant.findFirst({
             where: {

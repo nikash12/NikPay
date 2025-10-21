@@ -72,7 +72,7 @@ export default function AddMoney() {
 
     return (
         <form
-            className="flex flex-col justify-center items-center w-[30%] bg-gray-800 p-4 rounded-lg"
+            className="flex flex-col justify-center items-center  bg-base-200 p-4 rounded-lg"
             onSubmit={handleConfirm}
         >
             <input
@@ -92,7 +92,7 @@ export default function AddMoney() {
             <button
                 type="button"
                 onClick={handleAddMoney}
-                className="btn btn-primary w-[80%]"
+                className="btn btn-primary "
             >
                 Add Money
             </button>

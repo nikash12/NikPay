@@ -63,7 +63,7 @@ export default function UserTransactions() {
 
       {/* Transactions list */}
       {loading ? (
-        <div className="text-center text-gray-500">Loading transactions...</div>
+        <span className="loading loading-ball loading-xl"></span>
       ) : transactions.length === 0 ? (
         <div className="text-center text-gray-500">No transactions found.</div>
       ) : (

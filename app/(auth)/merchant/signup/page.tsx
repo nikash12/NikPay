@@ -6,12 +6,15 @@ import { MerchantSignUpType,MerchantSignUpSchema } from "@/types/merchant/mercha
 import axios from "axios"
 import { useRouter } from "next/navigation";
 import { error } from "console";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 export default function SignUpPage() {
     const router = useRouter()
+    const { showToast } = useToast();
+    
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         if( !verified ) {
-            alert("Please verify your phone number");   
+            showToast("Please verify your phone number", "error");
             return;
         }
         
@@ -21,7 +24,7 @@ export default function SignUpPage() {
         const business_name = formData.get("business_name");
 
         if( !email || !phone || !business_name ) {
-            alert("Please fill all required fields");
+            showToast("Please fill all required fields", "error");
             return;
         }
         const merchantData: MerchantSignUpType = {
@@ -32,7 +35,7 @@ export default function SignUpPage() {
 
         const res = MerchantSignUpSchema.safeParse(merchantData)
         if(!res.success) {
-            alert("Enter details correctly")
+            showToast("Enter details correctly", "error");
             console.log(res.error);
             return
         }
@@ -43,7 +46,7 @@ export default function SignUpPage() {
             router.push("/merchant/dashboard")
         })
         .catch((error)=>{
-            alert(error)
+            showToast("Failed to create account", "error");
         })
         console.log(merchantData);
     };
@@ -57,7 +60,7 @@ export default function SignUpPage() {
     return(
         <div className="w-full h-screen flex justify-center items-center bg-gray-900 text-white">
             <form className="border-[0.1px] h-[70vh] w-[70vw] md:w-[40vw] border-white flex flex-col justify-center gap-4 p-8 rounded-lg bg-gray-800" onSubmit={handleSubmit}>
-                <h1 className="text-2xl font-bold mb-4 text-center">User Sign Up</h1>
+                <h1 className="text-2xl font-bold mb-4 text-center">Merchant Sign Up</h1>
                 <input type="email" placeholder="Email" className="input-lg border-b-1 p-1" name="email" required/>
                 <PhoneNumberInput value={phone} onChange={setPhone} />
                 {
