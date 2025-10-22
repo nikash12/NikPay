@@ -10,7 +10,7 @@ export default function ProfilePage() {
   const user = session?.data?.user;
   const handleSignOut = async () => {
     await signOut();
-    Router.push("/user/signin");
+    Router.push("/signin");
   };
 
   if (session.status === "loading") {
@@ -53,7 +53,7 @@ export default function ProfilePage() {
 
       <button
         onClick={handleSignOut}
-        
+
         className="btn mt-6 bg-red-500 text-white py-2 px-4 rounded"
       >
         Sign Out

@@ -9,33 +9,38 @@ datasource db {
 }
 
 model User {
-  id                   String           @id @default(uuid())
-  email                String?          @unique
-  number               String           @unique
+  id                   String              @id @default(uuid())
+  email                String?             @unique
+  number               String              @unique
   name                 String?
-  password             String?          
-  kyc_status           KycStatus        @default(PENDING)
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  password             String?
+  kyc_status           KycStatus           @default(PENDING)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
   onRampTransactions   OnRampTransaction[]
   balance              Balance?
-  sentTransactions     P2PTransaction[] @relation("Sender")
-  receivedTransactions P2PTransaction[] @relation("Receiver")
+  sentTransactions     P2PTransaction[]    @relation("Sender")
+  receivedTransactions P2PTransaction[]    @relation("Receiver")
+  MerchantPayment      MerchantPayment[]
 }
 
 model Merchant {
-  id               String     @id @default(uuid())
-  email            String     @unique
-  number           String    @unique
+  id               String               @id @default(uuid())
+  email            String               @unique
+  number           String               @unique
   business_name    String
   category         String?
   business_address String?
   gst_number       String?
   pan_number       String?
-  kyc_status       KycStatus  @default(PENDING)
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-  auth_type        AuthType   @default(OTP)
+  kyc_status       KycStatus            @default(PENDING)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  auth_type        AuthType             @default(OTP)
+  payments         MerchantPayment[]
+  bankAccount      MerchantBankAccount?
+  settlements      Settlement[]
+  balance          MerchantBalance?
 }
 
 model Balance {
@@ -59,7 +64,7 @@ model OnRampTransaction {
 }
 
 model P2PTransaction {
-  id           String   @id @default(uuid())          
+  id           String   @id @default(uuid())
   status       Status
   senderId     String
   receiverId   String
@@ -69,11 +74,80 @@ model P2PTransaction {
   receiver     User     @relation("Receiver", fields: [receiverId], references: [id])
 }
 
+model MerchantPayment {
+  id             String   @id @default(uuid())
+  merchantId     String
+  customerId     String?
+  amount         Float
+  fees           Float
+  net_amount     Float
+  status         Status
+  payment_method String?
+  initiated_at   DateTime @default(now())
+
+  merchant       Merchant        @relation(fields: [merchantId], references: [id])
+  customer       User?           @relation(fields: [customerId], references: [id])
+  SettlementItem SettlementItem?
+}
+
+model MerchantBankAccount {
+  id             String  @id @default(uuid())
+  merchantId     String  @unique
+  account_number String
+  ifsc_code      String
+  bank_name      String
+  account_holder String
+  is_verified    Boolean @default(false)
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+}
+
+model Settlement {
+  id             String           @id @default(uuid())
+  merchantId     String
+  fees           Float
+  amount         Float
+  net_amount     Float
+  status         Status
+  initiated_at   DateTime         @default(now())
+  completed_at   DateTime?
+  bank_reference String?
+  payout_type    PayoutType       @default(MANUAL)
+  merchant       Merchant         @relation(fields: [merchantId], references: [id])
+  SettlementItem SettlementItem[]
+}
+
+model SettlementItem {
+  id                String @id @default(uuid())
+  settlementId      String
+  merchantPaymentId String @unique
+
+  settlement      Settlement      @relation(fields: [settlementId], references: [id])
+  merchantPayment MerchantPayment @relation(fields: [merchantPaymentId], references: [id])
+
+  @@unique([settlementId, merchantPaymentId])
+}
+
+model MerchantBalance {
+  id         String   @id @default(uuid())
+  merchantId String   @unique
+  amount     Float    @default(0)
+  locked     Float    @default(0)
+  updatedAt  DateTime @updatedAt
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+}
+
+enum PayoutType {
+  MANUAL
+  AUTOMATIC
+}
+
 model otp {
   id        String   @id @default(uuid())
   number    String   @unique
   code      String
-  expiresAt DateTime  
+  expiresAt DateTime
 }
 
 enum AuthType {

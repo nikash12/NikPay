@@ -7,12 +7,12 @@ import { useToast } from "@/components/ui/toast/ToastProvider";
 import { Loader2, Upload, Save, LogOut } from "lucide-react";
 
 interface Merchant {
-  businessName: string;
+  business_name: string;
   category: string;
-  gstNumber: string;
-  panNumber: string;
-  address: string;
-  kycStatus: "PENDING" | "VERIFIED" | "REJECTED";
+  gst_number: string;
+  pan_number: string;
+  business_address: string;
+  kyc_status: "PENDING" | "VERIFIED" | "REJECTED";
   gstDoc?: string;
   panDoc?: string;
   bankProof?: string;
@@ -30,17 +30,6 @@ export default function MerchantProfile() {
   });
 
   useEffect(() => {
-    if (session?.user) {
-      setMerchant((prev) => ({
-        businessName: session.user.business_name || prev?.businessName || "",
-        category: session.user.category || prev?.category || "",
-        gstNumber: session.user.gst_number || prev?.gstNumber || "",
-        panNumber: session.user.pan_number || prev?.panNumber || "",
-        address: session.user.business_address || prev?.address || "",
-        kycStatus: session.user.kyc_status || prev?.kycStatus || "PENDING",
-      }));
-    }
-
     async function fetchData() {
       try {
         const res = await axios.get("/api/merchant/profile");
@@ -70,6 +59,7 @@ export default function MerchantProfile() {
 
   const handleSave = async () => {
     try {
+      console.log(merchant);
       await axios.patch("/api/merchant/profile", merchant);
       showToast("Profile updated successfully", "success");
     } catch (err) {
@@ -121,9 +111,9 @@ export default function MerchantProfile() {
                 <label className="label font-medium">Business Name</label>
                 <input
                   type="text"
-                  name="businessName"
+                  name="business_name"
                   className="input input-bordered w-full"
-                  value={merchant?.businessName || ""}
+                  value={merchant?.business_name || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -141,9 +131,9 @@ export default function MerchantProfile() {
                 <label className="label font-medium">GST Number</label>
                 <input
                   type="text"
-                  name="gstNumber"
+                  name="gst_number"
                   className="input input-bordered w-full"
-                  value={merchant?.gstNumber || ""}
+                  value={merchant?.gst_number || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -151,18 +141,18 @@ export default function MerchantProfile() {
                 <label className="label font-medium">PAN Number</label>
                 <input
                   type="text"
-                  name="panNumber"
+                  name="pan_number"
                   className="input input-bordered w-full"
-                  value={merchant?.panNumber || ""}
+                  value={merchant?.pan_number || ""}
                   onChange={handleChange}
                 />
               </div>
               <div className="col-span-2">
                 <label className="label font-medium">Address</label>
                 <textarea
-                  name="address"
+                  name="business_address"
                   className="textarea textarea-bordered w-full"
-                  value={merchant?.address || ""}
+                  value={merchant?.business_address || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -185,13 +175,13 @@ export default function MerchantProfile() {
             </p>
 
             <div className="mb-4">
-              {merchant?.kycStatus === "VERIFIED" && (
+              {merchant?.kyc_status === "VERIFIED" && (
                 <span className="badge badge-success badge-lg">✅ VERIFIED</span>
               )}
-              {merchant?.kycStatus === "PENDING" && (
+              {merchant?.kyc_status === "PENDING" && (
                 <span className="badge badge-warning badge-lg">🕒 PENDING</span>
               )}
-              {merchant?.kycStatus === "REJECTED" && (
+              {merchant?.kyc_status === "REJECTED" && (
                 <span className="badge badge-error badge-lg">❌ REJECTED</span>
               )}
             </div>
