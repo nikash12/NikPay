@@ -27,7 +27,7 @@ interface BalanceData {
 export default function MerchantSettlements() {
   const { data: session } = useSession();
   const { showToast } = useToast();
-  
+
   const [balance, setBalance] = useState<BalanceData | null>(null);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +40,7 @@ export default function MerchantSettlements() {
       try {
         // Fetch Balance Data
         const balanceRes = await axios.get("/api/merchant/balance");
-        setBalance(balanceRes.data);
+        setBalance(balanceRes.data.balance);
 
         // Fetch Settlement History
         const settlementRes = await axios.get("/api/merchant/settlements");
@@ -67,7 +67,7 @@ export default function MerchantSettlements() {
     try {
       // API call to trigger a manual settlement
       await axios.post("/api/merchant/payout", { amount: payoutAmount });
-      
+
       showToast("Payout requested successfully!", "success");
       setPayoutAmount('');
       // Optionally re-fetch data or update local state
@@ -86,10 +86,10 @@ export default function MerchantSettlements() {
   return (
     <div className="bg-base-100 shadow-xl p-6 rounded-box">
       <h2 className="card-title text-2xl font-semibold text-primary mb-6">Settlements Overview</h2>
-      
+
       {/* 1. Settlement Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        
+
         {/* Current Balance Card */}
         <div className="stat bg-neutral text-neutral-content rounded-lg p-4 shadow-md">
           <div className="stat-figure text-primary">
@@ -98,7 +98,7 @@ export default function MerchantSettlements() {
           <div className="stat-title text-white opacity-80">Current Balance</div>
           <div className="stat-value">₹{(balance?.amount || 0).toFixed(2)}</div>
         </div>
-        
+
         {/* Locked Funds Card */}
         <div className="stat bg-base-300 text-gray-700 rounded-lg p-4 shadow-md">
           <div className="stat-figure text-warning">
@@ -135,8 +135,8 @@ export default function MerchantSettlements() {
                 max={availableAmount}
               />
             </div>
-            <button 
-              onClick={handleManualPayout} 
+            <button
+              onClick={handleManualPayout}
               className="btn btn-success gap-2 w-full sm:w-auto"
               disabled={payoutAmount === '' || payoutAmount <= 0 || payoutAmount > availableAmount}
             >

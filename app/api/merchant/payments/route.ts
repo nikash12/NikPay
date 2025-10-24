@@ -15,14 +15,14 @@ export async function GET(req: Request) {
 
   try {
     // 2. Fetch Received P2P Transactions (The primary 'payment' flow)
-    const p2pTransactions = await prisma.p2PTransaction.findMany({
-      where: { receiverId: merchantId },
+    const merchantPayments = await prisma.merchantPayment.findMany({
+      where: { merchantId },
       select: {
         id: true,
         amount: true,
         status: true,
         initiated_at: true,
-        senderId: true,
+        customerId: true,
       },
       orderBy: { initiated_at: "desc" },
     });
@@ -42,13 +42,13 @@ export async function GET(req: Request) {
 
     // 4. Combine and Format for Frontend
     const allPayments = [
-      ...p2pTransactions.map((t) => ({
+      ...merchantPayments.map((t) => ({
         id: t.id,
         type: "P2P",
         status: t.status,
         amount: t.amount,
         date: t.initiated_at.toISOString(),
-        senderId: t.senderId, // for counterparty display
+        senderId: t.customerId
       })),
       ...onRampTransactions.map((t) => ({
         id: t.id,

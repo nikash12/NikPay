@@ -4,6 +4,7 @@ import { signOut } from "next-auth/react";
 import ProfileIcon from "@/components/ui/ProfileIcon";
 import { useSession } from "next-auth/react";
 import Router from "next/router";
+import QRCard from "@/components/ui/QRCard";
 
 export default function ProfilePage() {
   const session = useSession();

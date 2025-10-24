@@ -35,10 +35,17 @@ export default function TransferBox() {
         const { data } = res
         setLoading(true)
         try {
-            await axios.post(`/api/user/p2p`, {
+            const response = await axios.post(`/api/user/p2p`, {
                 to: data.number,
                 amount: data.amount
             })
+            console.log(response.data);
+            if (response.data?.paymentId) {
+                await axios.patch(`/api/merchant/payment/verify`, {
+                    paymentId: response.data.paymentId,
+                    status: "COMPLETED"
+                });
+            }
             console.log("Transfer successful:", { number, amount })
             setNumber("")
             setAmount("")
@@ -76,9 +83,8 @@ export default function TransferBox() {
 
             <button
                 type="submit"
-                className={`btn btn-primary btn-lg w-full ${
-                    loading ? "loading" : ""
-                }`}
+                className={`btn btn-primary btn-lg w-full ${loading ? "loading" : ""
+                    }`}
                 disabled={loading}
             >
                 {loading ? "Processing..." : "Send Money"}

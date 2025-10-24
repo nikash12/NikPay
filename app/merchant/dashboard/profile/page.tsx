@@ -5,6 +5,7 @@ import axios from "axios";
 import { useSession, signOut } from "next-auth/react";
 import { useToast } from "@/components/ui/toast/ToastProvider";
 import { Loader2, Upload, Save, LogOut } from "lucide-react";
+import QRCard from "@/components/ui/QRCard";
 
 interface Merchant {
   business_name: string;
@@ -97,7 +98,7 @@ export default function MerchantProfile() {
   return (
     <div className="p-6 md:p-10 bg-base-200 min-h-screen">
       <div className="flex flex-col lg:flex-row gap-8">
-        
+
         {/* LEFT PANEL */}
         <div className="card w-full lg:w-1/2 bg-base-100 shadow-xl">
           <div className="card-body">
@@ -215,6 +216,9 @@ export default function MerchantProfile() {
         <button onClick={() => signOut()} className="btn btn-outline gap-2">
           <LogOut className="w-4 h-4" /> Sign Out
         </button>
+      </div>
+      <div className=" p-4 mt-6 rounded-lg shadow-md">
+        <QRCard />
       </div>
     </div>
   );

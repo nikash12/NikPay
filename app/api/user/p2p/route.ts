@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server"
-import { z } from "zod"
-import { prisma } from "@/lib/prisma"
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 
 export async function POST(request: NextRequest) {
@@ -11,65 +11,99 @@ export async function POST(request: NextRequest) {
 
     try {
         const body = await request.json();
+
         const schema = z.object({
-            to : z.string().length(13),
-            amount : z.string().regex(/^\d+(\.\d+)?$/)
-        })
-        const res = schema.safeParse(body)
-        if(!res.success) {
+            to: z.string(),
+            amount: z.string().regex(/^\d+(\.\d+)?$/)
+        });
+
+        const parsed = schema.safeParse(body);
+        if (!parsed.success) {
             return new Response("Invalid data", { status: 400 });
         }
-        const { to, amount } = res.data;
+
+        const { to, amount } = parsed.data;
         const amt = Math.floor(parseFloat(amount) * 100);
 
-        // checking if receiver exists
-        const receiver  = await prisma.user.findUnique({
-            where: {
-                number: to
-            }
-        })
-
-        if(!receiver){
-            return new Response("Receiver not found", { status: 404 });
-        }
-        
-        // checking balance
         const senderBalance = await prisma.balance.findUnique({
-            where: {
-                userId: session.user.id
-            }
-        })
-        if(!senderBalance || senderBalance.amount < amt){
+            where: { userId: session.user.id }
+        });
+        if (!senderBalance || senderBalance.amount < amt) {
             return new Response("Insufficient balance", { status: 400 });
         }
 
-        await prisma.$transaction(async (tx)=> {
-            // Deducting amount from sender
-            await tx.balance.upsert({
-                where: { userId: session.user.id },
-                update: { amount: { decrement: amt } },
-                create: { userId: session.user.id, amount: -amt }
-            });
-            // Adding amount to receiver
-            await tx.balance.upsert({
-                where: { userId: receiver.id },
-                update: { amount: { increment: amt } },
-                create: { userId: receiver.id, amount: amt }
-            });
-            await tx.p2PTransaction.create({
-                data: {
-                    senderId: session.user.id,
-                    receiverId: receiver.id,
-                    status: "COMPLETED",
-                    amount: amt
-                }
-            });
+        const receiver = await prisma.user.findUnique({
+            where: { number: to }
         });
 
+        if (receiver) {
+            await prisma.$transaction(async (tx) => {
+                await tx.balance.upsert({
+                    where: { userId: session.user.id },
+                    update: { amount: { decrement: amt } },
+                    create: { userId: session.user.id, amount: -amt }
+                });
+                await tx.balance.upsert({
+                    where: { userId: receiver.id },
+                    update: { amount: { increment: amt } },
+                    create: { userId: receiver.id, amount: amt }
+                });
+                await tx.p2PTransaction.create({
+                    data: {
+                        senderId: session.user.id,
+                        receiverId: receiver.id,
+                        status: "COMPLETED",
+                        amount: amt
+                    }
+                });
+            });
 
-        return new Response("Transaction successful", { status: 200 });
+            return new Response(JSON.stringify({ message: "Transaction successful" }), { status: 200 });
+        }
+
+        const merchant = await prisma.merchant.findFirst({
+            where: {
+                OR: [
+                    { id: to },
+                    { number: to }
+                ]
+            }
+        });
+
+        if (merchant) {
+            const fees = Math.floor(amt * 0.03); // 3% fee
+            const net_amount = amt - fees;
+
+            const merchantPayment = await prisma.$transaction(async (tx) => {
+                const deduct = await tx.balance.update({
+                    where: { userId: session.user.id },
+                    data: { amount: { decrement: amt } }
+                });
+
+                const payment = await tx.merchantPayment.create({
+                    data: {
+                        merchantId: merchant.id,
+                        customerId: session.user.id,
+                        amount: amt,
+                        fees,
+                        net_amount,
+                        status: "PENDING"
+                    }
+                });
+
+                return payment;
+            });
+
+            return new Response(JSON.stringify({
+                message: "Merchant payment initiated",
+                paymentId: merchantPayment.id
+            }), { status: 200 });
+        }
+
+        return new Response("Receiver not found", { status: 404 });
+
     } catch (error) {
-        console.error("Error parsing request body:", error);
-        return new Response("Invalid request", { status: 400 });    
+        console.error("Error processing transaction:", error);
+        return new Response("Something went wrong", { status: 500 });
     }
 }
